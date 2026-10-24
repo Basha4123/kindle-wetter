@@ -1,0 +1,50 @@
+name: Wetterbild erzeugen
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # alle 30 Minuten (GitHub startet oft ein paar Minuten später)
+  workflow_dispatch:          # manuell starten über "Run workflow"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write              # für das Wachhalten des Zeitplans (siehe unten)
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  bild:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    env:
+      KW_ORT: ${{ vars.KW_ORT || 'Berlin' }}
+      KW_LAT: ${{ vars.KW_LAT || '52.52' }}
+      KW_LON: ${{ vars.KW_LON || '13.41' }}
+      KW_BREITE: ${{ vars.KW_BREITE || '758' }}
+      KW_HOEHE: ${{ vars.KW_HOEHE || '1024' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - run: python render.py site/wetter.png
+      - run: cp index.html site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4
+
+      # GitHub pausiert Zeitpläne in Repos ohne Aktivität nach 60 Tagen.
+      # Das erneute Aktivieren setzt diesen Zähler zurück.
+      - name: Zeitplan wachhalten
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/wetter.yml/enable" || true
