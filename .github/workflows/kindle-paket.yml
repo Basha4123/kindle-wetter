@@ -1,0 +1,60 @@
+name: Kindle-Paket bauen
+
+# Baut die Programme für den Kindle (ARM) und packt alles, was auf den
+# Kindle kopiert werden muss, in ein ZIP (Artefakt "kindle-paket").
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["kindle/**", ".github/workflows/kindle-paket.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  paket:
+    runs-on: ubuntu-24.04
+    env:
+      TARGET: arm-unknown-linux-musleabi
+      XH_VERSION: v0.16.1
+      KINDLE_DASH_COMMIT: c83842e7561340e902812f358481f689cdec24a4
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Quellen holen
+        run: |
+          git clone --depth 1 --branch "$XH_VERSION" https://github.com/ducaale/xh.git /tmp/xh
+          git clone https://github.com/pascalw/kindle-dash.git /tmp/kindle-dash
+          git -C /tmp/kindle-dash checkout "$KINDLE_DASH_COMMIT"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cross
+            /tmp/xh/target
+            /tmp/kindle-dash/src/next-wakeup/target
+          key: kindle-bin-${{ env.XH_VERSION }}-${{ env.KINDLE_DASH_COMMIT }}
+
+      - name: cross installieren
+        run: command -v cross || cargo install cross --git https://github.com/cross-rs/cross --locked
+
+      - name: xh bauen (HTTPS-Client)
+        run: cd /tmp/xh && cross build --release --target "$TARGET"
+
+      - name: next-wakeup bauen (Zeitplan)
+        run: cd /tmp/kindle-dash/src/next-wakeup && cross build --release --target "$TARGET"
+
+      - name: Paket zusammenstellen
+        run: |
+          mkdir -p paket
+          cp -r kindle/dashboard kindle/extensions paket/
+          cp "/tmp/xh/target/$TARGET/release/xh" paket/dashboard/
+          cp "/tmp/kindle-dash/src/next-wakeup/target/$TARGET/release/next-wakeup" paket/dashboard/
+          mkdir -p paket/dashboard/local/state paket/dashboard/logs
+          chmod +x paket/dashboard/xh paket/dashboard/next-wakeup paket/dashboard/*.sh paket/dashboard/local/*.sh
+          file paket/dashboard/xh paket/dashboard/next-wakeup
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kindle-paket
+          path: paket
