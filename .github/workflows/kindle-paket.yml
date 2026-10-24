@@ -38,11 +38,20 @@ jobs:
       - name: cross installieren
         run: command -v cross || cargo install cross --git https://github.com/cross-rs/cross --locked
 
+      # Ältere libc/getrandom-Versionen linken nicht gegen aktuelles musl (open64),
+      # deshalb innerhalb der erlaubten Versionen aktualisieren. webpki-roots
+      # bringt aktuelle Stammzertifikate mit – der Kindle hat nur alte.
       - name: xh bauen (HTTPS-Client)
-        run: cd /tmp/xh && cross build --release --target "$TARGET"
+        run: |
+          cd /tmp/xh
+          cargo update -p libc -p getrandom -p webpki-roots
+          cross build --release --target "$TARGET"
 
       - name: next-wakeup bauen (Zeitplan)
-        run: cd /tmp/kindle-dash/src/next-wakeup && cross build --release --target "$TARGET"
+        run: |
+          cd /tmp/kindle-dash/src/next-wakeup
+          cargo update -p libc
+          cross build --release --target "$TARGET"
 
       - name: Paket zusammenstellen
         run: |
