@@ -23,7 +23,7 @@ jobs:
     environment:
       name: github-pages
     env:
-      KW_ORT: ${{ vars.KW_ORT || 'Berlin' }}
+      KW_ORT: ${{ vars.KW_ORT || 'auto' }}
       KW_LAT: ${{ vars.KW_LAT || '52.52' }}
       KW_LON: ${{ vars.KW_LON || '13.41' }}
       KW_BREITE: ${{ vars.KW_BREITE || '758' }}

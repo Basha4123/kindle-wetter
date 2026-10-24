@@ -3,7 +3,7 @@
 
 Daten: Deutscher Wetterdienst (DWD) über die freie Bright-Sky-API (kein API-Key nötig).
 Konfiguration über Umgebungsvariablen:
-  KW_ORT     Anzeigename des Ortes            (Standard: Berlin)
+  KW_ORT     Anzeigename des Ortes            (leer oder "auto": aus den Koordinaten bestimmt)
   KW_LAT     Breitengrad                      (Standard: 52.52)
   KW_LON     Längengrad                       (Standard: 13.41)
   KW_BREITE  Displaybreite in Pixeln          (Standard: 758, Kindle Paperwhite 1/2)
@@ -24,7 +24,7 @@ from zoneinfo import ZoneInfo
 
 from PIL import Image, ImageDraw, ImageFont
 
-ORT = os.environ.get("KW_ORT", "Berlin")
+ORT = os.environ.get("KW_ORT", "auto").strip()
 LAT = float(os.environ.get("KW_LAT", "52.52"))
 LON = float(os.environ.get("KW_LON", "13.41"))
 ZIEL_W = int(os.environ.get("KW_BREITE", "758"))
@@ -71,7 +71,26 @@ def lade_daten():
     except Exception as e:  # Messwerte sind nett, aber nicht zwingend
         print(f"Aktuelle Messwerte nicht verfügbar: {e}", file=sys.stderr)
         aktuell = {}
-    return {"stunden": stunden["weather"], "aktuell": aktuell}
+    return {"stunden": stunden["weather"], "aktuell": aktuell,
+            "ort": ortsname(stunden.get("sources") or [])}
+
+
+def ortsname(quellen):
+    """Name des Ortes: fest vorgegeben, sonst per OpenStreetMap aus den Koordinaten."""
+    if ORT and ORT.lower() != "auto":
+        return ORT
+    try:
+        antwort = hole_json("https://nominatim.openstreetmap.org/reverse?format=json"
+                            f"&lat={LAT}&lon={LON}&zoom=10&accept-language=de")
+        adresse = antwort.get("address", {})
+        for feld in ("city", "town", "village", "municipality", "county"):
+            if adresse.get(feld):
+                return adresse[feld]
+    except Exception as e:
+        print(f"Ortsname nicht ermittelbar: {e}", file=sys.stderr)
+    if quellen and quellen[0].get("station_name"):
+        return quellen[0]["station_name"].split("/")[0].title()
+    return f"{LAT:.2f}, {LON:.2f}"
 
 
 def ts(record):
@@ -270,8 +289,11 @@ def symbol(c, kind, cx, cy, g):
 
 # ---- Bereiche
 
-def kopf(c, jetzt, m):
-    c.text((m, 34), ORT, 34, "Inter-Bold", anchor="ls")
+def kopf(c, jetzt, m, ort):
+    groesse = 34
+    while groesse > 22 and c.breite(ort, groesse, "Inter-Bold") > W - 2 * m - 280:
+        groesse -= 2
+    c.text((m, 34), ort, groesse, "Inter-Bold", anchor="ls")
     datum = f"{WOCHENTAGE[jetzt.weekday()]}, {jetzt.day}. {MONATE[jetzt.month - 1]}"
     c.text((W - m, 34), datum, 22, "Inter-SemiBold", anchor="rs")
     c.text((W - m, 60), f"Stand {jetzt:%H:%M} Uhr", 16, fill=MID, anchor="rs")
@@ -418,7 +440,7 @@ def render(daten):
 
     c = Leinwand()
     m = 36
-    kopf(c, jetzt, m)
+    kopf(c, jetzt, m, daten.get("ort") or ORT or "Wetter")
     jetzt_block(c, aktuell, naechste, heute, m, 92)
     details(c, aktuell, naechste, heute, auf, unter, m, 342)
     verlauf(c, stunden, jetzt, m, 466, 262)
