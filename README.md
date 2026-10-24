@@ -47,11 +47,9 @@ Optional kannst du einen festen Ort erzwingen. Lege dazu unter *Settings → Sec
    2. WLAN einschalten, im *Experimentellen Browser* `https://winterbreak2.now.sh/` öffnen und auf *Jailbreak* tippen.
    3. Danach sofort wieder in den Flugmodus.
 2. **Hotfix, MRPI und KUAL installieren:** Das ist auf kindlemodding.org beschrieben. Den Hotfix nach jedem Neustart über „Run Hotfix" erneut ausführen, falls er angezeigt wird.
-3. **kindle-dash herunterladen:** Lade die aktuelle Version von [github.com/pascalw/kindle-dash/releases](https://github.com/pascalw/kindle-dash/releases) herunter und entpacke sie.
-4. **Dateien darüberkopieren:** Kopiere `kindle/dashboard/*` darüber. Trage danach dein Token in `local/github.conf` ein.
-5. **Auf den Kindle kopieren:**
-   - den Ordner nach `dashboard/`, sodass `start.sh` unter `/mnt/us/dashboard/start.sh` liegt,
-   - `kindle/extensions/kindle-wetter` nach `extensions/`.
+3. **Kindle-Paket herunterladen:** Gehe zu *Actions → „Kindle-Paket bauen"*, öffne den letzten erfolgreichen Lauf und lade unten das Artefakt **kindle-paket** herunter. Es enthält die Programme `xh` und `next-wakeup`, die bereits für den Kindle gebaut sind.
+4. **Token eintragen:** Trage dein Token in `dashboard/local/github.conf` ein.
+5. **Auf den Kindle kopieren:** Kopiere die Ordner `dashboard` und `extensions` aus dem Paket per USB ins Hauptverzeichnis des Kindle. Der Ordner `extensions` ist schon vorhanden, die Inhalte werden zusammengeführt.
 6. **Starten:** WLAN einschalten, dann **KUAL → Kindle-Wetter → Wetter-Anzeige starten**.
 
 **Beenden:** Power-Taste etwa 20 Sekunden gedrückt halten. Der Kindle startet dann ganz normal neu.
@@ -78,5 +76,5 @@ Für andere Kindle-Modelle setzt du `KW_BREITE` und `KW_HOEHE` auf die Display-A
 - Wetterdaten: [Deutscher Wetterdienst](https://www.dwd.de) über [Bright Sky](https://brightsky.dev)
 - Ortsnamen: © [OpenStreetMap](https://www.openstreetmap.org/copyright)-Mitwirkende (Nominatim)
 - WLAN-Ortung: [BeaconDB](https://beacondb.net). Netze mit `_nomap` im Namen werden ausgelassen.
-- Kindle-Client: [kindle-dash](https://github.com/pascalw/kindle-dash) (MIT), angepasst für den Paperwhite
+- Kindle-Client: [kindle-dash](https://github.com/pascalw/kindle-dash) (MIT), angepasst für den Paperwhite; HTTP-Client [xh](https://github.com/ducaale/xh) (MIT)
 - Schrift: [Inter](https://rsms.me/inter/) (SIL Open Font License)

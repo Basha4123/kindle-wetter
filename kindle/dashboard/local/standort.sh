@@ -25,7 +25,7 @@ wlan_standort() {
       printf "%s{\"macAddress\":\"%s\",\"signalStrength\":%d}", (n++ ? "," : ""), $1, $3 }')
   [ -n "$netze" ] || return 1
   antwort=$(echo "{\"considerIp\":false,\"wifiAccessPoints\":[$netze]}" |
-    "$XH" -q --check-status --timeout 20 POST https://api.beacondb.net/v1/geolocate \
+    "$XH" --check-status --timeout 20 POST https://api.beacondb.net/v1/geolocate \
       Content-Type:application/json User-Agent:kindle-wetter) || return 1
   LAT=$(echo "$antwort" | zahl lat)
   LON=$(echo "$antwort" | zahl lng)
@@ -34,7 +34,7 @@ wlan_standort() {
 }
 
 ip_standort() {
-  antwort=$("$XH" -q --check-status --ignore-stdin --timeout 20 GET https://ipinfo.io/json) || return 1
+  antwort=$("$XH" --check-status --ignore-stdin --timeout 20 GET https://ipinfo.io/json) || return 1
   loc=$(echo "$antwort" | sed -n 's/.*"loc"[ ]*:[ ]*"\([^"]*\)".*/\1/p' | head -n 1)
   LAT=${loc%,*}
   LON=${loc#*,}
