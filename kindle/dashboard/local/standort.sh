@@ -10,6 +10,17 @@ STATE="$DIR/state/standort"
 
 # Ab dieser Entfernung (km) gilt der Standort als geändert
 SCHWELLE_KM=${SCHWELLE_KM:-5}
+# So oft (Sekunden) wird der Standort höchstens geprüft
+STANDORT_INTERVALL=${STANDORT_INTERVALL:-3300}
+GEPRUEFT="$DIR/state/standort_geprueft"
+
+jetzt=$(date +%s)
+zuletzt=$(cat "$GEPRUEFT" 2>/dev/null || echo 0)
+if [ $((jetzt - zuletzt)) -lt "$STANDORT_INTERVALL" ] && [ -f "$STATE" ]; then
+  exit 0
+fi
+mkdir -p "$DIR/state"
+echo "$jetzt" >"$GEPRUEFT"
 
 zahl() { # erste Zahl hinter "$1": aus JSON auf stdin
   sed -n "s/.*\"$1\"[ ]*:[ ]*\(-\{0,1\}[0-9][0-9.]*\).*/\1/p" | head -n 1

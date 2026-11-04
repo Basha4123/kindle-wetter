@@ -3,7 +3,7 @@
 Macht aus einem alten Kindle eine Wetterstation, die ohne eigenen Server läuft. Der Kindle erkennt seinen Standort selbst.
 
 ```
-Kindle (wacht alle 30 min auf)                         GitHub (kostenlos)
+Kindle (wacht alle 10 min auf)                         GitHub (kostenlos)
   1. WLAN-Netze in der Nähe -> BeaconDB -> Koordinaten
      (Fallback: Standort der Internetverbindung)
   2. Ort geändert?  -> Variablen KW_LAT/KW_LON setzen ──►  Workflow "Wetterbild erzeugen"
@@ -20,7 +20,7 @@ Kindle (wacht alle 30 min auf)                         GitHub (kostenlos)
 - ein Verlauf über die nächsten 24 Stunden
 - eine Vorhersage für die nächsten 5 Tage
 
-Nachts (22–6 Uhr) zeigt der Kindle einen Nachtbildschirm und schläft. Das spart Akku.
+Das Wetter bleibt rund um die Uhr sichtbar (kein Bildschirmschoner) und wird alle 10 Minuten aktualisiert. Zeitplan und Intervalle stehen in `kindle/dashboard/local/env.sh`. Bei diesem Takt hält der Akku etwa 1 Woche, ein USB-Netzteil ist empfehlenswert.
 
 **Datenschutz:** Der genaue Standort wird nur als Repository-*Variable* gespeichert. Die ist für Außenstehende nicht sichtbar, auch nicht in einem öffentlichen Repository, und wird auf etwa 1 km gerundet. Öffentlich sichtbar ist nur das fertige Bild mit dem Ortsnamen.
 
