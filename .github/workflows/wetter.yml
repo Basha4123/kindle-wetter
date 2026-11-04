@@ -35,7 +35,7 @@ jobs:
           python-version: "3.12"
       - run: pip install pillow
       - run: python render.py site/wetter.png
-      - run: cp index.html site/
+      - run: cp index.html site/ && date +%s > site/stand.txt
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

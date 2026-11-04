@@ -5,9 +5,8 @@
 # Rückgabe: 0 = Standort unverändert, 10 = neuer Standort gemeldet, sonst Fehler.
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-XH="$DIR/../xh"
 STATE="$DIR/state/standort"
-. "$DIR/github.conf"
+. "$DIR/github.sh"
 
 # Ab dieser Entfernung (km) gilt der Standort als geändert
 SCHWELLE_KM=${SCHWELLE_KM:-5}
@@ -60,19 +59,13 @@ if [ -f "$STATE" ]; then
   echo "Standort hat sich um ${km} km geändert"
 fi
 
-api() { # api METHODE PFAD [feld=wert ...]
-  methode=$1; pfad=$2; shift 2
-  "$XH" -q --check-status --ignore-stdin --timeout 20 "$methode" "https://api.github.com/repos/$GITHUB_REPO$pfad" \
-    "Authorization:Bearer $GITHUB_TOKEN" Accept:application/vnd.github+json User-Agent:kindle-wetter "$@"
-}
-
 setze_variable() { # vorhandene Variable ändern, sonst anlegen
   api PATCH "/actions/variables/$1" "name=$1" "value=$2" >/dev/null 2>&1 ||
     api POST "/actions/variables" "name=$1" "value=$2" >/dev/null
 }
 
 setze_variable KW_LAT "$LAT" && setze_variable KW_LON "$LON" &&
-  api POST "/actions/workflows/wetter.yml/dispatches" ref=main >/dev/null || {
+  bild_anfordern || {
     echo "GitHub-Aktualisierung fehlgeschlagen (Token prüfen)"
     exit 2
   }
