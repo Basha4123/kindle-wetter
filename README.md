@@ -42,15 +42,11 @@ Optional kannst du einen festen Ort erzwingen. Lege dazu unter *Settings → Sec
 
 > ⚠️ Lass den Kindle bis zum Jailbreak im **Flugmodus**, damit kein Amazon-Update dazwischenkommt.
 
-1. **Jailbreak mit WinterBreak2:** Folge dem Assistenten auf [kindlemodding.org](https://kindlemodding.org/jailbreaking/). Kurz gesagt:
-   1. `jb.sh`, `patchedUks.sqsh` und `winterbreak2/` ins Hauptverzeichnis des Kindle kopieren.
-   2. WLAN einschalten, im *Experimentellen Browser* `https://winterbreak2.now.sh/` öffnen und auf *Jailbreak* tippen.
-   3. Danach sofort wieder in den Flugmodus.
-2. **Hotfix, MRPI und KUAL installieren:** Das ist auf kindlemodding.org beschrieben. Den Hotfix nach jedem Neustart über „Run Hotfix" erneut ausführen, falls er angezeigt wird.
-3. **Kindle-Paket herunterladen:** Gehe zu *Actions → „Kindle-Paket bauen"*, öffne den letzten erfolgreichen Lauf und lade unten das Artefakt **kindle-paket** herunter. Es enthält die Programme `xh` und `next-wakeup`, die bereits für den Kindle gebaut sind.
-4. **Token eintragen:** Trage dein Token in `dashboard/local/github.conf` ein.
-5. **Auf den Kindle kopieren:** Kopiere die Ordner `dashboard` und `extensions` aus dem Paket per USB ins Hauptverzeichnis des Kindle. Der Ordner `extensions` ist schon vorhanden, die Inhalte werden zusammengeführt.
-6. **Starten:** WLAN einschalten, dann **KUAL → Kindle-Wetter → Wetter-Anzeige starten**.
+1. **Jailbreak mit WinterBreak2:** Folge dem Assistenten auf [kindlemodding.org](https://kindlemodding.org/jailbreaking/WinterBreak2/). Den Hotfix bringt WinterBreak2 schon mit, und KUAL wird nicht gebraucht.
+2. **Kindle-Paket herunterladen:** Gehe zu *Actions → „Kindle-Paket bauen"*, öffne den letzten erfolgreichen Lauf und lade das Artefakt **kindle-paket** herunter.
+3. **Token eintragen:** Trage dein Token in `dashboard/local/github.conf` ein.
+4. **Auf den Kindle kopieren:** Kopiere die Ordner `dashboard`, `documents` und `extensions` per USB ins Hauptverzeichnis des Kindle. Bestehende Ordner werden dabei zusammengeführt.
+5. **Starten:** Schalte das WLAN ein. In der Bibliothek erscheint **„Kindle-Wetter starten"**. Antippen, fertig. Falls KUAL installiert ist, geht es alternativ über *KUAL → Kindle-Wetter*.
 
 **Beenden:** Power-Taste etwa 20 Sekunden gedrückt halten. Der Kindle startet dann ganz normal neu.
 

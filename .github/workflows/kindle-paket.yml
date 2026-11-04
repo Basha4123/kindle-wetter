@@ -56,7 +56,7 @@ jobs:
       - name: Paket zusammenstellen
         run: |
           mkdir -p paket
-          cp -r kindle/dashboard kindle/extensions paket/
+          cp -r kindle/dashboard kindle/extensions kindle/documents paket/
           cp "/tmp/xh/target/$TARGET/release/xh" paket/dashboard/
           cp "/tmp/kindle-dash/src/next-wakeup/target/$TARGET/release/next-wakeup" paket/dashboard/
           mkdir -p paket/dashboard/local/state paket/dashboard/logs
