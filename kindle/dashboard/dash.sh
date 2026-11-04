@@ -4,10 +4,14 @@
 DEBUG=${DEBUG:-false}
 [ "$DEBUG" = true ] && set -x
 
-DIR="$(dirname "$0")"
+DIR="$(cd "$(dirname "$0")" && pwd)"
 DASH_PNG="$DIR/dash.png"
 FETCH_DASHBOARD_CMD="$DIR/local/fetch-dashboard.sh"
 LOW_BATTERY_CMD="$DIR/local/low-battery.sh"
+BIN_DIR="$DIR"
+STANDARD_WARTEZEIT=600
+erster_lauf=true
+zeile=3
 
 REFRESH_SCHEDULE=${REFRESH_SCHEDULE:-"2,32 8-17 * * MON-FRI"}
 FULL_DISPLAY_REFRESH_RATE=${FULL_DISPLAY_REFRESH_RATE:-0}
@@ -18,6 +22,30 @@ LOW_BATTERY_REPORTING=${LOW_BATTERY_REPORTING:-false}
 LOW_BATTERY_THRESHOLD_PERCENT=${LOW_BATTERY_THRESHOLD_PERCENT:-10}
 
 num_refresh=0
+
+# Meldung ins Protokoll und – beim Start oder bei Fehlern – aufs Display
+zeige() {
+  echo "$(date '+%H:%M:%S') $*"
+  /usr/sbin/eips 2 "$zeile" "$*" >/dev/null 2>&1
+  zeile=$((zeile + 2))
+}
+
+# Programme direkt von /mnt/us starten; falls das nicht erlaubt ist,
+# nach /var/tmp kopieren und von dort ausführen.
+pruefe_programme() {
+  if "$BIN_DIR/next-wakeup" --schedule="$REFRESH_SCHEDULE" --timezone="$TIMEZONE" >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Programme auf /mnt/us nicht ausführbar, kopiere nach /var/tmp"
+  BIN_DIR=/var/tmp/kindle-wetter
+  mkdir -p "$BIN_DIR"
+  cp "$DIR/xh" "$DIR/next-wakeup" "$BIN_DIR/" && chmod +x "$BIN_DIR/xh" "$BIN_DIR/next-wakeup"
+  if ! "$BIN_DIR/next-wakeup" --schedule="$REFRESH_SCHEDULE" --timezone="$TIMEZONE" >/dev/null 2>&1; then
+    zeige "FEHLER: Programme nicht ausfuehrbar"
+    zeige "Bitte dashboard/logs/dash.log schicken"
+    return 1
+  fi
+}
 
 init() {
   if [ -z "$TIMEZONE" ] || [ -z "$REFRESH_SCHEDULE" ]; then
@@ -38,6 +66,11 @@ init() {
   initctl stop webreader >/dev/null 2>&1
   echo powersave >/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
   lipc-set-prop com.lab126.powerd preventScreenSaver 1
+
+  /usr/sbin/eips -c >/dev/null 2>&1
+  zeige "Kindle-Wetter startet ..."
+  pruefe_programme
+  export XH_BIN="$BIN_DIR/xh"
 }
 
 prepare_sleep() {
@@ -54,16 +87,23 @@ prepare_sleep() {
 
 refresh_dashboard() {
   echo "Refreshing dashboard"
+  [ "$erster_lauf" = true ] && zeige "Verbinde mit WLAN ..."
   lipc-set-prop com.lab126.wifid enable 1 >/dev/null 2>&1
-  "$DIR/wait-for-wifi.sh" "$WIFI_TEST_IP"
-
-  "$FETCH_DASHBOARD_CMD" "$DASH_PNG"
-  fetch_status=$?
-
-  if [ "$fetch_status" -ne 0 ]; then
-    echo "Not updating screen, fetch-dashboard returned $fetch_status"
+  lipc-set-prop com.lab126.cmd ensureConnection "wifi:" >/dev/null 2>&1
+  if ! sh "$DIR/wait-for-wifi.sh" "$WIFI_TEST_IP"; then
+    zeige "Kein WLAN - neuer Versuch in 10 Minuten"
     return 1
   fi
+
+  [ "$erster_lauf" = true ] && zeige "Lade Wetterbild (bis zu 2 Minuten) ..."
+  sh "$FETCH_DASHBOARD_CMD" "$DASH_PNG"
+  fetch_status=$?
+
+  if [ "$fetch_status" -ne 0 ] || [ ! -s "$DASH_PNG" ]; then
+    zeige "Wetterbild nicht geladen (Fehler $fetch_status)"
+    return 1
+  fi
+  erster_lauf=false
 
   if [ "$num_refresh" -eq "$FULL_DISPLAY_REFRESH_RATE" ]; then
     num_refresh=0
@@ -117,7 +157,10 @@ main_loop() {
   while true; do
     log_battery_stats
 
-    next_wakeup_secs=$("$DIR/next-wakeup" --schedule="$REFRESH_SCHEDULE" --timezone="$TIMEZONE")
+    next_wakeup_secs=$("$BIN_DIR/next-wakeup" --schedule="$REFRESH_SCHEDULE" --timezone="$TIMEZONE")
+    case "$next_wakeup_secs" in
+      '' | *[!0-9]*) next_wakeup_secs=$STANDARD_WARTEZEIT ;;
+    esac
 
     if [ "$next_wakeup_secs" -gt "$SLEEP_SCREEN_INTERVAL" ]; then
       action="sleep"

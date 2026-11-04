@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Gemeinsame Helfer für den Zugriff auf GitHub (wird per "." eingebunden).
 LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
-XH="$LOCAL_DIR/../xh"
+XH="${XH_BIN:-$LOCAL_DIR/../xh}"
 . "$LOCAL_DIR/github.conf"
 
 BENUTZER=$(echo "${GITHUB_REPO%%/*}" | tr 'A-Z' 'a-z')

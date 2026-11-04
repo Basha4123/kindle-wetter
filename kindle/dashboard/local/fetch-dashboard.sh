@@ -8,7 +8,7 @@ WARTEZEIT=${WARTEZEIT:-75}
 # Älter als das (Sekunden) gilt das Bild als veraltet.
 MAX_ALTER=${MAX_ALTER:-2400}
 
-"$DIR/standort.sh"
+sh "$DIR/standort.sh"
 if [ $? -eq 10 ]; then
   echo "Neuer Ort – warte auf das passende Bild"
   sleep "$WARTEZEIT"
